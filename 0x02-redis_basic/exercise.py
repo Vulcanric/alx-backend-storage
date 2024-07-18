@@ -19,6 +19,9 @@ def count_calls(method: Callable[..., Any]) -> Callable[..., Any]:
     Returns:
         Wrapper function as `counter`
     """
+    # Use method's qualified name as a key to its count
+    mkey = method.__qualname__
+
     # @functool.wraps Prevents overwriting functions name and docstring
     # to that of wrapper
     @wraps(method)
@@ -27,9 +30,6 @@ def count_calls(method: Callable[..., Any]) -> Callable[..., Any]:
         Counts the nummber of calls on method
         Returns: the actual output of method
         """
-        # Use method's qualified name as a key to its count
-        mkey = method.__qualname__
-
         if self._redis.get(mkey):  # If called before
             self._redis.incr(mkey)  # Increment count
         else:  # If method hasn't been called before
