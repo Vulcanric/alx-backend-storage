@@ -2,12 +2,12 @@
 """ Implement a Cache class for storing data """
 import redis
 import uuid  # For Key generation
-from typing import Union, Callable, Any, Optional
+from typing import Callable, Any, Optional
 from functools import wraps
 
 
 # Decorator function
-def count_calls(method: Callable[..., Any]) -> Callable[..., Any]:
+def count_calls(method: Callable) -> Callable:
     """
     Counts the number of times a class method is called.
     Saves this count in the database with key as the
@@ -65,7 +65,7 @@ class Cache:
         self._redis.flushdb()  # Clear up the database
 
     @count_calls
-    def store(self, data: Union[str, bytes, int, float]) -> str:
+    def store(self, data: Any) -> str:
         """
         Stores the input data with a generated key.
 
@@ -78,7 +78,7 @@ class Cache:
         self._redis.set(data_key, data)  # Store data
         return data_key
 
-    def get(self, key: str, fn: Optional[Callable[..., Any]] = None) -> Any:
+    def get(self, key: str, fn: Optional[Callable] = None) -> Any:
         """
         Retrieves a data from redis database by it's key. Calls a function
         on the data to convert it to a desired state.
