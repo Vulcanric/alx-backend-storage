@@ -62,3 +62,15 @@ class Cache:
             data = fn(data)
 
         return data
+
+    def get_str(self, key: str) -> str:
+        """
+        Retrieves a data from redis database as string.
+        """
+        return self.get(key, str)
+
+    def get_int(self, key: str) -> int:
+        """
+        Retrieves a data from redis database as integer
+        """
+        return self.get(key, int)
