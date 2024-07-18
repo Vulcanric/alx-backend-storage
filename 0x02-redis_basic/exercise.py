@@ -2,7 +2,29 @@
 """ Implement a Cache class for storing data """
 import redis
 import uuid  # For Key generation
+import functool
+from collections import defaultdict
 from typing import Union, Callable, Any
+
+
+# Decorator function
+def count_calls(method: Callable[..., Any]) -> Callable[..., Any]:
+    """
+    Counts the number of times a class method is called
+
+    Args:
+        method: Method to count number of calls on
+
+    Returns:
+        Wrapper function as `counter`
+    """
+    method_calls_count = defaultdict(int)
+
+    @functool.wraps
+    def wrapper(self, *args, **kwargs):
+        method_calls_count[method.__qualname__] += 1
+        return method(*args, **kwargs)  # Return the original output from method
+    return wrapper
 
 
 class Cache:
