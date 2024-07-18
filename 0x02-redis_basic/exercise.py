@@ -2,28 +2,40 @@
 """ Implement a Cache class for storing data """
 import redis
 import uuid  # For Key generation
-import functool
-from collections import defaultdict
-from typing import Union, Callable, Any
+from typing import Union, Callable, Any, Optional
+from functools import wraps
 
 
 # Decorator function
 def count_calls(method: Callable[..., Any]) -> Callable[..., Any]:
     """
-    Counts the number of times a class method is called
+    Counts the number of times a class method is called.
+    Saves this count in the database with key as the
+    method qualified name
 
     Args:
-        method: Method to count number of calls on
+        method (Callable): Method to count number of calls on
 
     Returns:
         Wrapper function as `counter`
     """
-    method_calls_count = defaultdict(int)
-
-    @functool.wraps
+    # @functool.wraps Prevents overwriting functions name and docstring
+    # to that of wrapper
+    @wraps(method)
     def wrapper(self, *args, **kwargs):
-        method_calls_count[method.__qualname__] += 1
-        return method(*args, **kwargs)  # Return the original output from method
+        """
+        Counts the nummber of calls on method
+        Returns: the actual output of method
+        """
+        # Use method's qualified name as a key to its count
+        mkey = method.__qualname__
+
+        if not self._redis.get(mkey):  # If method hasn't been called before
+            self._redis.set(mkey, 0)  # Set to 0
+        else:
+            self._redis.incr(mkey)  # Increment count
+
+        return method(self, *args, **kwargs)
     return wrapper
 
 
@@ -52,13 +64,13 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()  # Clear up the database
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
-        Stores the input data with a generated key.
+        Stores the input data with a generated key or an input key.
 
         Args:
-            data (str | bytes | int | float): Data to be stored
-
+            data (String | bytes | int | float): Data to be stored
         Returns:
             key of data
         """
@@ -66,14 +78,14 @@ class Cache:
         self._redis.set(data_key, data)  # Store data
         return data_key
 
-    def get(self, key: str, fn: Callable[..., Any]) -> Any:
+    def get(self, key: str, fn: Optional[Callable[..., Any]] = None) -> Any:
         """
         Retrieves a data from redis database by it's key. Calls a function
         on the data to convert it to a desired state.
 
         Args:
-            key: The key to find value by
-            fn: callable to convert data
+            key (String): The key to find value by
+            fn (Callable): callback function to convert data
 
         Returns:
             Converted data
