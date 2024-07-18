@@ -30,10 +30,10 @@ def count_calls(method: Callable[..., Any]) -> Callable[..., Any]:
         # Use method's qualified name as a key to its count
         mkey = method.__qualname__
 
-        if not self._redis.get(mkey):  # If method hasn't been called before
-            self._redis.set(mkey, 0)  # Set to 0
-        else:
+        if self._redis.get(mkey):  # If called before
             self._redis.incr(mkey)  # Increment count
+        else:  # If method hasn't been called before
+            self._redis.set(mkey, 1)  # Start counting from 1
 
         return method(self, *args, **kwargs)
     return wrapper
@@ -67,7 +67,7 @@ class Cache:
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
-        Stores the input data with a generated key or an input key.
+        Stores the input data with a generated key.
 
         Args:
             data (String | bytes | int | float): Data to be stored
