@@ -8,22 +8,8 @@ from functools import wraps
 
 # Decorator function
 def count_calls(method: Callable) -> Callable:
-    """
-    Counts the number of times a class method is called.
-    Saves this count in the database with key as the
-    method qualified name
-
-    Args:
-        method (Callable): Method to count number of calls on
-
-    Returns:
-        Wrapper function as `counter`
-    """
-    # Use method's qualified name as a key to its count
     mkey = method.__qualname__
 
-    # @functool.wraps Prevents overwriting functions name and docstring
-    # to that of wrapper
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """
