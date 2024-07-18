@@ -2,7 +2,7 @@
 """ Implement a Cache class for storing data """
 import redis
 import uuid  # For Key generation
-from typing import Union
+from typing import Union, Callable, Any
 
 
 class Cache:
@@ -43,3 +43,22 @@ class Cache:
         data_key = str(uuid.uuid4())  # Generate key
         self._redis.set(data_key, data)  # Store data
         return data_key
+
+    def get(self, key: str, fn: Callable[..., Any]) -> Any:
+        """
+        Retrieves a data from redis database by it's key. Calls a function
+        on the data to convert it to a desired state.
+
+        Args:
+            key: The key to find value by
+            fn: callable to convert data
+
+        Returns:
+            Converted data
+        """
+        data = self._redis.get(key)
+
+        if data and fn is not None:
+            data = fn(data)
+
+        return data
