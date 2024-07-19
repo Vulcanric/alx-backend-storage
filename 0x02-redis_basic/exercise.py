@@ -54,9 +54,9 @@ def replay(func: Callable) -> None:
     local_redis = redis.Redis()
 
     # Retrieving calls history from database
-    # type: ignore[union-attr]
     inputs = [_.decode() for _ in local_redis.lrange(f'{fn}:inputs', 0, -1)]
     outputs = [_.decode() for _ in local_redis.lrange(f'{fn}:outputs', 0, -1)]
+    print(f"{fn} was called {len(inputs)} times:")
 
     # Display history data
     for input_, output in zip(inputs, outputs):
