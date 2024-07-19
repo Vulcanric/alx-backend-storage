@@ -6,6 +6,7 @@ from typing import Callable, Any, Optional
 from functools import wraps
 
 
+# Read all definitions in Cache class before any definition outside
 # Decorator function counts the number of calls on a method and stores count
 def count_calls(method: Callable) -> Callable:
     mkey = method.__qualname__
@@ -33,6 +34,33 @@ def call_history(method: Callable) -> Callable:
         self._redis.rpush(outputs_list_key, str(output))
         return output
     return wrapper
+
+
+# Regular function that displays the history of calls of a specific function
+def replay(func: Callable) -> None:
+    """
+    Displays calls history of a specific function decorated by `call_history`
+    Prints history in the exact way function was called
+
+    Arg:
+        func(Callable): Function decorated by `call_history`
+
+    Display Format:
+        funcname(*arg, *kwargs)
+
+    Returns: Nothing
+    """
+    fn = func.__qualname__
+    local_redis = redis.Redis()
+
+    # Retrieving calls history from database
+    # type: ignore[union-attr]
+    inputs = [_.decode() for _ in local_redis.lrange(f'{fn}:inputs', 0, -1)]
+    outputs = [_.decode() for _ in local_redis.lrange(f'{fn}:outputs', 0, -1)]
+
+    # Display history data
+    for input_, output in zip(inputs, outputs):
+        print(f'{fn}(*{input_}) -> {output}')
 
 
 class Cache:
