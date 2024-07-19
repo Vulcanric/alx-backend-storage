@@ -6,22 +6,32 @@ from typing import Callable, Any, Optional
 from functools import wraps
 
 
-# Decorator function
+# Decorator function counts the number of calls on a method and stores count
 def count_calls(method: Callable) -> Callable:
     mkey = method.__qualname__
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        """
-        Counts the nummber of calls on method
-        Returns: the actual output of method
-        """
         if self._redis.get(mkey):  # If called before
             self._redis.incr(mkey)  # Increment count
         else:  # If method hasn't been called before
             self._redis.set(mkey, 1)  # Start counting from 1
 
         return method(self, *args, **kwargs)
+    return wrapper
+
+
+# Decorator function stores method's inputs and outputs in respective lists
+def call_history(method: Callable) -> Callable:
+    inputs_list_key = f'{method.__qualname__}:inputs'
+    outputs_list_key = f'{method.__qualname__}:outputs'
+
+    @wraps(method)
+    def wrapper(self, *args):
+        self._redis.rpush(inputs_list_key, str(args))
+        output = method(self, *args)
+        self._redis.rpush(outputs_list_key, str(output))
+        return output
     return wrapper
 
 
@@ -51,6 +61,7 @@ class Cache:
         self._redis.flushdb()  # Clear up the database
 
     @count_calls
+    @call_history
     def store(self, data: Any) -> str:
         """
         Stores the input data with a generated key.
