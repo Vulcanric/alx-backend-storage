@@ -9,10 +9,12 @@ from functools import wraps
 # Read all definitions in Cache class before any definition outside
 # Decorator function counts the number of calls on a method and stores count
 def count_calls(method: Callable) -> Callable:
+    """Count number of calls on a method"""
     mkey = method.__qualname__
 
     @wraps(method)
     def wrapper(self, *args, **kwargs):
+        """Stores its count in the database"""
         if self._redis.get(mkey):  # If called before
             self._redis.incr(mkey)  # Increment count
         else:  # If method hasn't been called before
@@ -24,11 +26,13 @@ def count_calls(method: Callable) -> Callable:
 
 # Decorator function stores method's inputs and outputs in respective lists
 def call_history(method: Callable) -> Callable:
+    """Stores method's inputs and outputs into database"""
     inputs_list_key = f'{method.__qualname__}:inputs'
     outputs_list_key = f'{method.__qualname__}:outputs'
 
     @wraps(method)
     def wrapper(self, *args):
+        """Wrapper function that performs the operation"""
         self._redis.rpush(inputs_list_key, str(args))
         output = method(self, *args)
         self._redis.rpush(outputs_list_key, str(output))
