@@ -22,7 +22,7 @@ def track_calls(func: Callable) -> Callable:
         if client.exists(track_key):
             client.incr(track_key)
         else:
-            client.setex(track_key, 10, 1)
+            client.psetex(track_key, 10000, 1)
 
         return func(url)
     return wrapper
