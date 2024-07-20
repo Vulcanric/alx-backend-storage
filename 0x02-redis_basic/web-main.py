@@ -11,8 +11,10 @@ url = "http://www.google.com"
 
 print(f"Number of request to {url}: {client.get('count:{}'.format(url))}")
 get_page(url)
+time.sleep(1)
 print(f"Number of request to {url}: {client.get('count:{}'.format(url))}")
 get_page(url)
+time.sleep(1)
 print(f"Number of request to {url}: {client.get('count:{}'.format(url))}")
 
 for i in range(10):
