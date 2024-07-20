@@ -19,11 +19,10 @@ def track_calls(func: Callable) -> Callable:
         track_key = f'count:{url}'
         client = redis.Redis()
 
-        if client.get(track_key):
+        if client.exists(track_key):
             client.incr(track_key)
         else:
-            client.set(track_key, 1)
-            client.expire(track_key, 10)
+            client.setex(track_key, 10, 1)
 
         return func(url)
     return wrapper
