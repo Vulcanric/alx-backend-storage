@@ -12,7 +12,7 @@ def track_calls(func: Callable) -> Callable:
     its count to redis using the key `count:{url}`. This data lives
     for 10 seconds before expiring.
     """
-    def wrapper(url):
+    def wrapper(url: str) -> str:
         """
         Stores url access count into database
         """
@@ -23,7 +23,7 @@ def track_calls(func: Callable) -> Callable:
             client.incr(track_key)
         else:
             client.set(track_key, 1)
-        client.expire(track_key, 10)
+            client.expire(track_key, 10)
 
         return func(url)
     return wrapper
